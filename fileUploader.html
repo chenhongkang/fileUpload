@@ -1,0 +1,74 @@
+<html>
+    <head>
+    <body>
+        <form action="http://localhost:8002/upload" method="POST">
+            jsReadFile:<input type="file" name='file' onchange="jsReadFiles(this.files)"/>
+            <input type="text" name="a" id="">
+            <button type="submit">提交</button>
+        </form>
+    </body>
+    <script>
+        var Ajax = {
+            get: function(url,fn){
+                // XMLHttpRequest对象用于在后台与服务器交换数据
+                var xhr=new XMLHttpRequest();
+                xhr.open('GET',url,false);
+                xhr.onreadystatechange=function(){
+                    // readyState == 4说明请求已完成
+                    if(xhr.readyState==4){
+                        if(xhr.status==200 || xhr.status==304){
+                            console.log(xhr.responseText);
+                            fn.call(xhr.responseText);
+                        }
+                    }
+                }
+                xhr.send();
+            },
+
+            // data应为'a=a1&b=b1'这种字符串格式，在jq里如果data为对象会自动将对象转成这种字符串格式
+            post: function(url, data){
+                var xhr=new XMLHttpRequest();
+                xhr.open('POST',url,false);
+                // 添加http头，发送信息至服务器时内容编码类型
+                xhr.setRequestHeader('Content-Type','multipart/form-data');
+                xhr.onreadystatechange=function(){
+                    if (xhr.readyState==4){
+                        if (xhr.status==200 || xhr.status==304){
+                            console.log(xhr.responseText);
+                        }
+                    }
+                }
+                xhr.send(data);
+            }
+        }
+        // 获取File对象
+        function jsReadFiles (files) {
+            console.log(files)
+            if (files.length) {
+                var file = files[0]
+                var reader = new FileReader()
+                if (/text+/.test(file.type)) {
+                    reader.onload = function() {
+                        document.body.append('<pre>' + this.result + '</pre>')
+                        var fileText = new Blob([this.result], { type: file.type })
+                        fileText.arrayBuffer().then(buffer => {
+                            Ajax.post('http://localhost:8002/upload', buffer)
+                        })
+                    }
+                    reader.readAsBinaryString(file);
+                } else if(/image+/.test(file.type)) {
+                    reader.onload = function() {
+                        document.body.append('<img src="' + this.result + '"/>')
+                        var fileText = new Blob([this.result], { type: file.type })
+                        fileText.arrayBuffer().then(buffer => {
+                            // console.log(buffer)
+                            Ajax.post('http://localhost:8002/upload', buffer)
+                        })
+                        Ajax.post(this.result)
+                    }
+                    reader.readAsBinaryString(file);
+                }
+            }
+        }
+    </script>
+</html>
