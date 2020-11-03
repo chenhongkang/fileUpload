@@ -27,7 +27,7 @@ const httpHandle = (req, res) => {
     //允许跨域
     res.setHeader("Access-Control-Allow-Origin", "*"); // 设置可访问的源
     res.setHeader("Access-Control-Allow-Credentials", true); // 设置可访问的源
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-pingother"); 
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-pingother,Upload-File-Id,Upload-File-Order,Upload-File-End"); 
     res.setHeader("content-type", "application/json")
     //解析query
     req.query = querystring.parse(query)

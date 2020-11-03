@@ -26,11 +26,15 @@
             },
 
             // data应为'a=a1&b=b1'这种字符串格式，在jq里如果data为对象会自动将对象转成这种字符串格式
-            post: function(url, data){
-                var xhr=new XMLHttpRequest();
+            post: function(url, data, splitOptions){
+                let { fileId, ifEnd, fileOrder } = splitOptions
+                let xhr=new XMLHttpRequest();
                 xhr.open('POST',url,false);
                 // 添加http头，发送信息至服务器时内容编码类型
-                xhr.setRequestHeader('Content-Type','multipart/form-data');
+                xhr.setRequestHeader('Content-Type','multipart/form-data')
+                xhr.setRequestHeader('Upload-File-Id', fileId)
+                xhr.setRequestHeader('Upload-File-Order', fileOrder)
+                xhr.setRequestHeader('Upload-File-End', ifEnd)
                 xhr.onreadystatechange=function(){
                     if (xhr.readyState==4){
                         if (xhr.status==200 || xhr.status==304){
@@ -51,22 +55,40 @@
                     reader.onload = function() {
                         document.body.append('<pre>' + this.result + '</pre>')
                         var fileText = new Blob([this.result], { type: file.type })
-                        fileText.arrayBuffer().then(buffer => {
-                            Ajax.post('http://localhost:8002/upload', buffer)
-                        })
+                        blobSplitUpload(fileText)
+                        // Ajax.post('http://localhost:8002/upload', fileText)
+                        // fileText.arrayBuffer().then(buffer => {
+                        //     Ajax.post('http://localhost:8002/upload', buffer)
+                        // })
                     }
                     reader.readAsBinaryString(file);
                 } else if(/image+/.test(file.type)) {
                     reader.onload = function() {
                         document.body.append('<img src="' + this.result + '"/>')
                         var fileText = new Blob([this.result], { type: file.type })
-                        fileText.arrayBuffer().then(buffer => {
-                            // console.log(buffer)
-                            Ajax.post('http://localhost:8002/upload', buffer)
-                        })
+                        Ajax.post('http://localhost:8002/upload', fileText)
+                        // fileText.arrayBuffer().then(buffer => {
+                        //     // console.log(buffer)
+                        //     Ajax.post('http://localhost:8002/upload', buffer)
+                        // })
                         Ajax.post(this.result)
                     }
                     reader.readAsBinaryString(file);
+                }
+            }
+            function blobSplitUpload (blob, chunkSize = 1000) {
+                console.log(blob)
+                let { size } = blob
+                let start = 0
+                let fileId = Math.random().toFixed(10)
+                while (start < size) {
+                    let splitOptions = {
+                        fileId,
+                        fileOrder: Math.floor(start / chunkSize),
+                        ifEnd: start + chunkSize >= size
+                    }
+                    Ajax.post('http://localhost:8002/upload', blob.slice(start, start + chunkSize), splitOptions)
+                    start += chunkSize
                 }
             }
         }
