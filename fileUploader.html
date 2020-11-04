@@ -2,13 +2,13 @@
     <head>
     <body>
         <form action="http://localhost:8002/upload" method="POST">
-            jsReadFile:<input type="file" name='file' onchange="jsReadFiles(this.files)"/>
+            jsReadFile:<input type="file" name='file' accept='*' webkitdirectory multiple onchange="jsReadFiles(this.files)"/>
             <input type="text" name="a" id="">
-            <button type="submit">提交</button>
         </form>
+        <button onclick=''>上传</button>
     </body>
     <script>
-        var Ajax = {
+        let Ajax = {
             get: function(url,fn){
                 // XMLHttpRequest对象用于在后台与服务器交换数据
                 var xhr=new XMLHttpRequest();
@@ -51,45 +51,29 @@
             if (files.length) {
                 var file = files[0]
                 var reader = new FileReader()
-                if (/text+/.test(file.type)) {
-                    reader.onload = function() {
-                        document.body.append('<pre>' + this.result + '</pre>')
-                        var fileText = new Blob([this.result], { type: file.type })
-                        blobSplitUpload(fileText)
-                        // Ajax.post('http://localhost:8002/upload', fileText)
-                        // fileText.arrayBuffer().then(buffer => {
-                        //     Ajax.post('http://localhost:8002/upload', buffer)
-                        // })
-                    }
-                    reader.readAsBinaryString(file);
-                } else if(/image+/.test(file.type)) {
-                    reader.onload = function() {
-                        document.body.append('<img src="' + this.result + '"/>')
-                        var fileText = new Blob([this.result], { type: file.type })
-                        Ajax.post('http://localhost:8002/upload', fileText)
-                        // fileText.arrayBuffer().then(buffer => {
-                        //     // console.log(buffer)
-                        //     Ajax.post('http://localhost:8002/upload', buffer)
-                        // })
-                        Ajax.post(this.result)
-                    }
-                    reader.readAsBinaryString(file);
+                reader.onload = function() {
+                    document.body.append('<pre>' + this.result + '</pre>')
+                    // fileText 设置成全局的抛出
+                    fileText = new Blob([this.result], { type: file.type })
+                    blobSplitUpload(fileText)
                 }
+                reader.readAsBinaryString(file);
             }
-            function blobSplitUpload (blob, chunkSize = 1000) {
-                console.log(blob)
-                let { size } = blob
-                let start = 0
-                let fileId = Math.random().toFixed(10)
-                while (start < size) {
-                    let splitOptions = {
-                        fileId,
-                        fileOrder: Math.floor(start / chunkSize),
-                        ifEnd: start + chunkSize >= size
-                    }
-                    Ajax.post('http://localhost:8002/upload', blob.slice(start, start + chunkSize), splitOptions)
-                    start += chunkSize
+        }
+        // 分片上传
+        function blobSplitUpload (blob, chunkSize = 100) {
+            console.log(blob)
+            let { size } = blob
+            let start = 0
+            let fileId = Math.random().toFixed(10)
+            while (start < size) {
+                let splitOptions = {
+                    fileId,
+                    fileOrder: Math.floor(start / chunkSize),
+                    ifEnd: start + chunkSize >= size
                 }
+                Ajax.post('http://localhost:8002/upload', blob.slice(start, start + chunkSize), splitOptions)
+                start += chunkSize
             }
         }
     </script>

@@ -4,18 +4,6 @@ let uploadFileMap = {}
 // 返回数据
 const responseData = (req, res) => {
     if (req.url.includes('upload') && req.method.toLowerCase() === 'post') {
-        // let msg = []
-        // req.on('data', (chunk) => {
-        //     if(chunk){
-        //         msg.push(chunk);
-        //     }
-        // })
-        // req.on('end', () => {
-        //     // 对buffer数组阵列列表进行buffer合并返回一个Buffer
-        //     let buf = Buffer.concat(msg);
-        //     createFile(String(buf))
-        //     res.end('保存成功')
-        // })
         handleSplitUpload(req, res)
     }
     if (req.url.includes('show')) {
@@ -56,10 +44,9 @@ const handleSplitUpload = (req, res) => {
                 }
             }
         } else {
-            console.log('1234567890')
             result = false
         }
-        console.log(uploadFileMap[uploadFileId].status, result)
+        console.log(uploadFileOrder)
         result && createFile(''.concat(...uploadFileMap[uploadFileId]))
         res.end('保存成功')
     })
